@@ -1,0 +1,7 @@
+# Configurazione Netlify.
+# Sito statico: nessun comando di build; i file sono nella radice del repository.
+# La cartella delle funzioni abilita l'invio email automatico (/.netlify/functions/send-report).
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
