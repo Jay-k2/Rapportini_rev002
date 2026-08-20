@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0C2530">
+<title>Rapportini · Trattamento Acque</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --ink:#0C2530; --petrol:#123644; --steel:#1B586C;
+  --aqua:#0E9AAA; --aqua-d:#0B7C8A; --aqua-l:#12B4C4;
+  --paper:#EBEFF1; --card:#FFFFFF; --line:#D5DEE1;
+  --muted:#5B7480; --muted-2:#8299A2;
+  --amber:#D98600; --green:#1F9D5B; --danger:#CE4141;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sh:0 1px 2px rgba(12,37,48,.06),0 2px 8px rgba(12,37,48,.06);
+  --sh-lg:0 8px 30px rgba(12,37,48,.16);
+  --r:12px; --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--paper);
+  -webkit-text-size-adjust:100%; line-height:1.45;
+  padding-bottom:calc(72px + var(--safe-b));
+}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit;font-size:16px}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:linear-gradient(180deg,var(--ink),var(--petrol));
+  color:#EAF4F6; padding:14px 16px calc(14px);
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  display:flex; align-items:center; gap:12px; min-height:56px;
+  box-shadow:0 2px 10px rgba(12,37,48,.18);
+}
+.topbar .brand{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.topbar .brand b{font-size:16px;letter-spacing:.02em}
+.topbar .brand span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8FC4CC}
+.topbar .grow{flex:1}
+.iconbtn{
+  appearance:none;border:0;background:rgba(255,255,255,.08);color:#EAF4F6;
+  width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer;
+  transition:background .15s;
+}
+.iconbtn:hover{background:rgba(255,255,255,.16)}
+.iconbtn svg{width:20px;height:20px}
+.topbar .title-back{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar .title-back .t{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.section-label{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:22px 2px 10px;display:flex;align-items:center;gap:8px;
+}
+.section-label::before{content:"";width:14px;height:2px;background:var(--aqua);border-radius:2px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.card + .card{margin-top:12px}
+
+/* ---------- List ---------- */
+.searchbar{
+  display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:0 12px;box-shadow:var(--sh);margin-bottom:8px;
+}
+.searchbar svg{width:18px;height:18px;color:var(--muted-2);flex:none}
+.searchbar input{border:0;outline:0;padding:13px 6px;width:100%;background:transparent;font-size:15px}
+.filters{display:flex;gap:6px;overflow:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch}
+.chip{
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  padding:7px 13px;border-radius:999px;font-size:13px;white-space:nowrap;cursor:pointer;font-weight:600;
+}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.rep{display:flex;gap:12px;padding:14px 15px;cursor:pointer;align-items:flex-start;border-bottom:1px solid var(--line)}
+.rep:last-child{border-bottom:0}
+.rep:active{background:#F5F8F9}
+.rep .body{flex:1;min-width:0}
+.rep .r1{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.rep .client{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rep .plant{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.rep .meta{display:flex;gap:10px;color:var(--muted-2);font-size:12px;margin-top:7px;flex-wrap:wrap}
+.rep .meta .date{font-family:var(--mono)}
+.status{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:4px 8px;border-radius:6px;white-space:nowrap}
+.status.bozza{background:#FBEBD0;color:#8A5600}
+.status.completato{background:#D8F1E4;color:#0F6B3E}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty svg{width:52px;height:52px;color:var(--muted-2);opacity:.6}
+.empty h3{margin:14px 0 4px;color:var(--ink)}
+
+/* ---------- Forms ---------- */
+.grp{padding:6px 4px}
+.field{padding:12px 15px;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field label{display:block;font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.field input[type=text],.field input[type=date],.field input[type=time],.field input[type=number],.field textarea,.field select{
+  width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;background:#FBFDFD;color:var(--ink);outline:0;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--aqua);box-shadow:0 0 0 3px rgba(14,154,170,.15);background:#fff}
+.field textarea{min-height:96px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.row2 .field{border-right:1px solid var(--line)}
+.row2 .field:nth-child(2n){border-right:0}
+@media(max-width:420px){.row2{grid-template-columns:1fr}.row2 .field{border-right:0}}
+
+/* ---------- Instrument / measures panel (signature element) ---------- */
+.measures{background:linear-gradient(180deg,#0E2A35,#0C2530);border-radius:var(--r);padding:6px;border:1px solid #0A1E27}
+.mrow{display:grid;grid-template-columns:1fr 118px 34px;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.mrow:last-child{border-bottom:0}
+.mrow .mname{color:#BFE3E9;font-size:13px;font-weight:600}
+.mrow .mname small{display:block;color:#6C9AA4;font-size:10px;font-family:var(--mono);letter-spacing:.04em}
+.mrow .mval{display:flex;align-items:center;background:#071820;border:1px solid #1C4753;border-radius:8px;overflow:hidden}
+.mrow .mval input{width:100%;border:0;background:transparent;color:var(--aqua-l);font-family:var(--mono);font-size:16px;font-weight:600;text-align:right;padding:9px 8px;outline:0}
+.mrow .mval input::placeholder{color:#37606B}
+.mrow .munit{color:#79A7B0;font-family:var(--mono);font-size:11px;padding:0 9px 0 2px;white-space:nowrap}
+.mrow .mdel{background:transparent;border:0;color:#4E7883;cursor:pointer;display:grid;place-items:center;height:34px;border-radius:6px}
+.mrow .mdel:hover{color:#E88;background:rgba(255,80,80,.08)}
+.mrow .mdel svg{width:16px;height:16px}
+.measures-foot{padding:10px}
+.addmeasure{display:flex;gap:8px}
+.addmeasure select{flex:1;background:#0A2029;border:1px solid #1C4753;color:#CDE9EE;border-radius:8px;padding:9px;font-size:13px}
+.addmeasure button{background:var(--aqua);border:0;color:#052a30;font-weight:800;border-radius:8px;padding:0 14px;cursor:pointer}
+
+/* ---------- Materials / list rows ---------- */
+.matrow{display:grid;grid-template-columns:1fr 74px 34px;gap:8px;padding:9px 12px;align-items:center;border-bottom:1px solid var(--line)}
+.matrow:last-of-type{border-bottom:0}
+.matrow input{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#FBFDFD;width:100%}
+.linkbtn{background:none;border:0;color:var(--aqua-d);font-weight:700;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:14px}
+.linkbtn svg{width:17px;height:17px}
+.trash{background:none;border:0;color:var(--muted-2);display:grid;place-items:center;height:34px;border-radius:6px;cursor:pointer}
+.trash:hover{color:var(--danger);background:#FBEDED}
+.trash svg{width:17px;height:17px}
+
+/* ---------- Photos ---------- */
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:12px}
+.photo{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#DCE5E8;border:1px solid var(--line)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .rm{position:absolute;top:4px;right:4px;background:rgba(12,37,48,.72);border:0;color:#fff;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;cursor:pointer}
+.photo .rm svg{width:15px;height:15px}
+.addphoto{aspect-ratio:1;border:2px dashed var(--line);border-radius:10px;display:grid;place-items:center;color:var(--muted);cursor:pointer;background:#F7FAFB}
+.addphoto svg{width:26px;height:26px}
+.addphoto span{font-size:11px;margin-top:4px;font-weight:600}
+.addphoto .in{display:flex;flex-direction:column;align-items:center}
+
+/* ---------- Signature ---------- */
+.sigwrap{padding:12px}
+.sigpad{width:100%;height:190px;background:#fff;border:1px solid var(--line);border-radius:10px;touch-action:none;display:block;
+  background-image:linear-gradient(90deg,transparent 49.6%,#EEF3F4 49.6%,#EEF3F4 50.4%,transparent 50.4%)}
+.sigbar{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.sigbar .hint{color:var(--muted-2);font-size:12px}
+
+/* ---------- Buttons ---------- */
+.btn{appearance:none;border:0;border-radius:10px;padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--aqua);color:#04262b}
+.btn.primary:active{background:var(--aqua-d)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.danger{background:#FBEDED;color:var(--danger)}
+.btn.block{width:100%}
+.btnrow{display:flex;gap:10px;margin-top:16px}
+.btnrow .btn{flex:1}
+
+/* ---------- Bottom nav + FAB ---------- */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:45;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);display:flex;justify-content:space-around;
+  padding:8px 0 calc(8px + var(--safe-b));
+}
+.nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted-2);font-size:11px;font-weight:700;cursor:pointer;padding:2px 22px}
+.nav button svg{width:23px;height:23px}
+.nav button.on{color:var(--aqua-d)}
+.fab{
+  position:fixed;right:18px;bottom:calc(84px + var(--safe-b));z-index:46;
+  width:58px;height:58px;border-radius:18px;border:0;background:var(--aqua);color:#04262b;
+  box-shadow:var(--sh-lg);cursor:pointer;display:grid;place-items:center;
+}
+.fab svg{width:28px;height:28px}
+.fab:active{transform:scale(.96)}
+
+/* ---------- Toast / modal ---------- */
+.toast{position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:var(--sh-lg);max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sheet-bg{position:fixed;inset:0;background:rgba(12,37,48,.5);z-index:70;display:none;align-items:flex-end;justify-content:center}
+.sheet-bg.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px;box-shadow:var(--sh-lg)}
+.sheet h3{margin:0 0 6px}
+.sheet p{color:var(--muted);margin:0 0 18px}
+
+.logo-prev{width:48px;height:48px;border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--line)}
+.hidden{display:none!important}
+
+/* ---------- Print ---------- */
+#printRoot{display:none}
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,.nav,.fab,.toast,#app{display:none!important}
+  #printRoot{display:block}
+  @page{size:A4;margin:14mm}
+}
+.pr{font-family:var(--sans);color:#0C2530;font-size:12px}
+.pr h1{font-size:19px;margin:0}
+.pr .phead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0C2530;padding-bottom:10px;margin-bottom:14px}
+.pr .phead .co{font-size:11px;color:#33525c;line-height:1.4}
+.pr .plogo{max-height:52px;max-width:150px}
+.pr .ptitle{text-align:right}
+.pr .ptitle .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#5B7480}
+.pr .pn{font-family:var(--mono);font-size:13px;font-weight:700}
+.pr .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin-bottom:12px}
+.pr .pg{border-bottom:1px solid #E3EAEC;padding:5px 0}
+.pr .pg .k{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#7C949C}
+.pr .pg .v{font-size:12.5px}
+.pr .sh{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#0E9AAA;font-weight:800;border-bottom:1px solid #0E9AAA;padding-bottom:3px;margin:16px 0 8px}
+.pr .ptxt{white-space:pre-wrap;font-size:12px}
+.pr table{width:100%;border-collapse:collapse;font-size:11.5px}
+.pr th{text-align:left;background:#EEF3F4;padding:6px 8px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#5B7480;border:1px solid #DDE5E7}
+.pr td{padding:6px 8px;border:1px solid #E3EAEC}
+.pr td.num{font-family:var(--mono);text-align:right}
+.pr .pphotos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.pr .pphotos img{width:100%;height:120px;object-fit:cover;border:1px solid #DDE5E7;border-radius:4px}
+.pr .psign{display:flex;justify-content:space-between;margin-top:26px;gap:30px}
+.pr .psign .box{flex:1}
+.pr .psign .sig-img{height:70px;object-fit:contain;display:block;margin-bottom:4px}
+.pr .psign .sline{border-top:1px solid #0C2530;padding-top:4px;font-size:10px;color:#5B7480}
+
+/* checkbox cliente assente */
+.chk{display:flex;align-items:center;gap:11px;padding:13px 15px;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--line)}
+.chk:last-child{border-bottom:0}
+.chk input{width:21px;height:21px;accent-color:var(--aqua-d);flex:none}
+.note{padding:14px 15px;color:#7A5A00;font-size:13.5px;background:#FBF3E0;line-height:1.5}
+/* righe cliente in impostazioni */
+.cli{padding:12px 14px;border-bottom:1px solid var(--line)}
+.cli:last-of-type{border-bottom:0}
+.cli>input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 11px;margin-bottom:6px;background:#FBFDFD;font-weight:600}
+.cli2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.cli2 input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 11px;background:#FBFDFD}
+@media(max-width:440px){.cli2{grid-template-columns:1fr}}
+.btn.block{width:100%}
+.send-hint{text-align:center;color:var(--muted-2);font-size:12px;margin-top:7px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px}
+.switch{position:relative;width:46px;height:27px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:#C4D0D4;border-radius:999px;transition:.2s}
+.switch .sl::before{content:"";position:absolute;height:21px;width:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked + .sl{background:var(--aqua-d)}
+.switch input:checked + .sl::before{transform:translateX(19px)}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar"></div>
+<div id="app"></div>
+
+<button class="fab" id="fab" onclick="newReport()" aria-label="Nuovo rapportino">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<nav class="nav" id="nav">
+  <button data-v="list" onclick="go('list')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+    Rapportini
+  </button>
+  <button data-v="settings" onclick="go('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Impostazioni
+  </button>
+</nav>
+
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<div id="printRoot"></div>
+
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+/* ============================= Storage ============================= */
+const DB_NAME='rapportini_acque', VER=1;
+let idb=null, useMem=false, mem={reports:new Map(), kv:new Map()};
+
+function openDB(){return new Promise(res=>{
+  let ok=false;
+  try{
+    const rq=indexedDB.open(DB_NAME,VER);
+    rq.onupgradeneeded=e=>{const db=e.target.result;
+      if(!db.objectStoreNames.contains('reports'))db.createObjectStore('reports',{keyPath:'id'});
+      if(!db.objectStoreNames.contains('kv'))db.createObjectStore('kv');};
+    rq.onsuccess=e=>{idb=e.target.result;ok=true;res()};
+    rq.onerror=()=>{useMem=true;res()};
+    rq.onblocked=()=>{useMem=true;res()};
+    setTimeout(()=>{if(!ok&&!idb){useMem=true;res()}},1200);
+  }catch(err){useMem=true;res()}
+});}
+function tx(store,mode){return idb.transaction(store,mode).objectStore(store);}
+function dbPut(store,val,key){return new Promise((res,rej)=>{
+  if(useMem){mem[store].set(key??val.id,val);return res()}
+  const r=key!==undefined?tx(store,'readwrite').put(val,key):tx(store,'readwrite').put(val);
+  r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+function dbGet(store,key){return new Promise((res,rej)=>{
+  if(useMem)return res(mem[store].get(key));
+  const r=tx(store,'readonly').get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function dbAll(store){return new Promise((res,rej)=>{
+  if(useMem)return res([...mem[store].values()]);
+  const r=tx(store,'readonly').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}
+function dbDel(store,key){return new Promise((res,rej)=>{
+  if(useMem){mem[store].delete(key);return res()}
+  const r=tx(store,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+
+/* ============================= State ============================= */
+const MEASURE_PRESETS=[
+  ['pH',''],['Conducibilità','µS/cm'],['Cloro libero','mg/L'],['Cloro totale','mg/L'],
+  ['Torbidità','NTU'],['Durezza totale','°f'],['Temperatura','°C'],['Portata','m³/h'],
+  ['Pressione ingresso','bar'],['Pressione uscita','bar'],['Redox (ORP)','mV'],
+  ['Ossigeno disciolto','mg/L'],['TDS','ppm'],['Ferro','mg/L'],['SDI',''],['Dosaggio prodotto','L/h']
+];
+const DEFAULT_TYPES=['Manutenzione ordinaria','Manutenzione straordinaria','Guasto / Riparazione','Controllo / Ispezione','Campionamento / Analisi','Primo avviamento','Sanificazione','Sostituzione ricambi'];
+
+let settings={company:{name:'',vat:'',addr:'',phone:'',logo:''},clients:[],team:[],types:[...DEFAULT_TYPES],email:{endpoint:''}};
+let reports=[];
+let view='list';
+let current=null;         // report in modifica
+let listQuery='', listFilter='tutti';
+let sig={drawing:false,dirty:false,ctx:null,canvas:null,last:null};
+let saveTimer=null;
+
+function uid(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s){return (s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function todayISO(){const d=new Date();return d.toISOString().slice(0,10)}
+function nowHM(){return new Date().toTimeString().slice(0,5)}
+function fmtDate(iso){if(!iso)return '—';const[a,b,c]=iso.split('-');return `${c}/${b}/${a}`}
+
+/* ============================= Boot ============================= */
+async function boot(){
+  await openDB();
+  const s=await dbGet('kv','settings'); if(s)settings=Object.assign(settings,s);
+  if(!settings.clients)settings.clients=[];
+  if(!settings.email)settings.email={endpoint:''};
+  try{ if(window.applyPlugin&&window.jspdf)window.applyPlugin(window.jspdf.jsPDF); }catch(e){}
+  reports=await dbAll('reports');
+  reports.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0));
+  render();
+  if(useMem)toast('Modalità anteprima: i dati non verranno salvati qui');
+  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js')}catch(e){}}
+}
+
+/* ============================= Nav / render ============================= */
+async function go(v){ if(view==='editor'&&v!=='editor')await saveCurrent(true); view=v; current=null; render(); window.scrollTo(0,0); }
+function render(){
+  renderTopbar();
+  const app=document.getElementById('app');
+  document.getElementById('fab').classList.toggle('hidden',view!=='list');
+  document.getElementById('nav').classList.toggle('hidden',view==='editor');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  if(view==='list')app.innerHTML=listHTML();
+  else if(view==='editor')app.innerHTML=editorHTML();
+  else if(view==='settings')app.innerHTML=settingsHTML();
+  if(view==='editor')afterEditor();
+}
+function renderTopbar(){
+  const t=document.getElementById('topbar');
+  if(view==='editor'){
+    t.innerHTML=`
+      <button class="iconbtn" onclick="go('list')" aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="title-back"><span class="t">${current&&current.client?esc(current.client):'Nuovo rapportino'}</span></div>
+      <div class="grow"></div>
+      <button class="iconbtn" onclick="sendReport()" aria-label="Invia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
+      <button class="iconbtn" onclick="confirmDelete()" aria-label="Elimina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>`;
+  }else{
+    t.innerHTML=`
+      <div class="iconbtn" style="background:rgba(14,154,170,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#7FE0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s7 7.6 7 12a7 7 0 0 1-14 0c0-4.4 7-12 7-12z"/></svg></div>
+      <div class="brand"><b>${settings.company.name?esc(settings.company.name):'Rapportini'}</b><span>Trattamento acque</span></div>`;
+  }
+}
+
+/* ============================= LIST ============================= */
+function listHTML(){
+  let items=reports.filter(r=>{
+    if(listFilter!=='tutti'&&r.status!==listFilter)return false;
+    if(!listQuery)return true;
+    const q=listQuery.toLowerCase();
+    return [r.client,r.plant,r.type,r.tech,r.description].some(x=>(x||'').toLowerCase().includes(q));
+  });
+  const rowsHTML=items.map(r=>`
+    <div class="rep" onclick="openReport('${r.id}')">
+      <div class="body">
+        <div class="r1">
+          <span class="client">${esc(r.client)||'Cliente non indicato'}</span>
+          <span class="status ${r.status}">${r.status==='completato'?'Completato':'Bozza'}</span>
+        </div>
+        <div class="plant">${esc(r.plant)||'—'}</div>
+        <div class="meta">
+          <span class="date">${fmtDate(r.date)}</span>
+          ${r.type?`<span>· ${esc(r.type)}</span>`:''}
+          ${r.tech?`<span>· ${esc(r.tech)}</span>`:''}
+          ${(r.photos&&r.photos.length)?`<span>· ${r.photos.length} 📷</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+  const empty=`<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+      <h3>${reports.length?'Nessun risultato':'Ancora nessun rapportino'}</h3>
+      <p style="color:var(--muted);margin:4px 0 0">${reports.length?'Prova a cambiare ricerca o filtro.':'Tocca il pulsante + per crearne uno.'}</p>
+    </div>`;
+  return `<div class="wrap">
+    <div class="searchbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input placeholder="Cerca cliente, impianto, tecnico…" value="${esc(listQuery)}" oninput="listQuery=this.value;refreshList()">
+    </div>
+    <div class="filters">
+      ${['tutti','bozza','completato'].map(f=>`<button class="chip ${listFilter===f?'on':''}" onclick="listFilter='${f}';refreshList()">${f==='tutti'?'Tutti':f==='bozza'?'Bozze':'Completati'}</button>`).join('')}
+    </div>
+    <div class="card">${items.length?rowsHTML:empty}</div>
+  </div>`;
+}
+function refreshList(){document.getElementById('app').innerHTML=listHTML();}
+
+/* ============================= REPORT model ============================= */
+function blankReport(){return{
+  id:uid(),createdAt:Date.now(),status:'bozza',
+  client:'',commessa:'',clientEmail:'',plant:'',location:'',date:todayISO(),start:nowHM(),end:'',
+  tech:settings.team[0]||'',type:settings.types[0]||'',
+  description:'',measures:[],materials:[],photos:[],
+  recommendations:'',signName:'',signature:'',clientAbsent:false
+};}
+function newReport(){ current=blankReport(); view='editor'; render(); window.scrollTo(0,0); }
+function openReport(id){ const src=reports.find(r=>r.id===id); if(!src)return; current=Object.assign({commessa:'',clientEmail:'',clientAbsent:false},structuredCloneSafe(src)); view='editor'; render(); window.scrollTo(0,0); }
+function structuredCloneSafe(o){return JSON.parse(JSON.stringify(o))}
+
+/* ============================= EDITOR ============================= */
+function editorHTML(){
+  const r=current;
+  return `<div class="wrap">
+    <div class="section-label">Cliente e impianto</div>
+    <div class="card">
+      <div class="field"><label>Cliente</label>${clientSelect(r)}</div>
+      <div class="row2">
+        <div class="field"><label>Commessa</label><input type="text" value="${esc(r.commessa)}" oninput="upd('commessa',this.value)" placeholder="N. commessa"></div>
+        <div class="field"><label>Email cliente</label><input type="email" inputmode="email" value="${esc(r.clientEmail)}" oninput="upd('clientEmail',this.value)" placeholder="cliente@email.it"></div>
+      </div>
+      <div class="field"><label>Impianto</label><input type="text" value="${esc(r.plant)}" oninput="upd('plant',this.value)" placeholder="Nome o codice impianto"></div>
+      <div class="field"><label>Sede / Ubicazione</label><input type="text" value="${esc(r.location)}" oninput="upd('location',this.value)" placeholder="Indirizzo del sito"></div>
+    </div>
+
+    <div class="section-label">Intervento</div>
+    <div class="card">
+      <div class="row2">
+        <div class="field"><label>Data</label><input type="date" value="${esc(r.date)}" oninput="upd('date',this.value)"></div>
+        <div class="field"><label>Tecnico</label>${techSelect(r.tech)}</div>
+        <div class="field"><label>Ora inizio</label><input type="time" value="${esc(r.start)}" oninput="upd('start',this.value)"></div>
+        <div class="field"><label>Ora fine</label><input type="time" value="${esc(r.end)}" oninput="upd('end',this.value)"></div>
+      </div>
+      <div class="field"><label>Tipo di intervento</label>${typeSelect(r.type)}</div>
+    </div>
+
+    <div class="section-label">Descrizione lavori</div>
+    <div class="card"><div class="field" style="border:0"><textarea oninput="upd('description',this.value)" placeholder="Attività svolte, anomalie riscontrate, esito…">${esc(r.description)}</textarea></div></div>
+
+    <div class="section-label">Parametri di processo</div>
+    <div class="measures">
+      <div id="measList">${measuresHTML(r.measures)}</div>
+      <div class="measures-foot">
+        <div class="addmeasure">
+          <select id="measSel">${MEASURE_PRESETS.map((m,i)=>`<option value="${i}">${esc(m[0])}${m[1]?' ('+esc(m[1])+')':''}</option>`).join('')}<option value="custom">+ Parametro personalizzato…</option></select>
+          <button onclick="addMeasure()">Aggiungi</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Materiali e ricambi</div>
+    <div class="card">
+      <div id="matList">${materialsHTML(r.materials)}</div>
+      <button class="linkbtn" onclick="addMaterial()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Aggiungi materiale</button>
+    </div>
+
+    <div class="section-label">Foto impianto</div>
+    <div class="card">
+      <div class="photos" id="photoGrid">${photosHTML(r.photos)}
+        <label class="addphoto"><div class="in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Aggiungi</span></div>
+          <input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="addPhotos(this)"></label>
+      </div>
+    </div>
+
+    <div class="section-label">Note e raccomandazioni</div>
+    <div class="card"><div class="field" style="border:0"><textarea oninput="upd('recommendations',this.value)" placeholder="Consigli per il cliente, prossimi controlli…">${esc(r.recommendations)}</textarea></div></div>
+
+    <div class="section-label">Firma del cliente</div>
+    <div class="card">
+      <label class="chk"><input type="checkbox" ${r.clientAbsent?'checked':''} onchange="toggleAbsent(this.checked)"> Cliente non presente per la firma</label>
+      ${r.clientAbsent?`<div class="note">Il cliente non era presente al momento dell'intervento: il rapportino sarà emesso senza firma e potrà essere inviato via email per approvazione.</div>`:`
+      <div class="field"><label>Nome firmatario</label><input type="text" value="${esc(r.signName)}" oninput="upd('signName',this.value)" placeholder="Chi firma per il cliente"></div>
+      <div class="sigwrap">
+        <canvas class="sigpad" id="sigpad"></canvas>
+        <div class="sigbar"><span class="hint">Firma con il dito nell'area bianca</span><button class="linkbtn" style="padding:6px 4px" onclick="clearSig()">Cancella</button></div>
+      </div>`}
+    </div>
+
+    <div class="btnrow">
+      <button class="btn ghost" onclick="toggleStatus()">${r.status==='completato'?'Segna come bozza':'Segna completato'}</button>
+      <button class="btn primary" onclick="saveCurrent();toast('Rapportino salvato')">Salva</button>
+    </div>
+    <button class="btn dark block" style="margin-top:10px" onclick="sendReport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>Invia PDF al cliente
+    </button>
+    <div class="send-hint">${r.clientEmail?('Destinatario: '+esc(r.clientEmail)):'Nessuna email cliente impostata — potrai scegliere come inviarlo'}</div>
+    <button class="btn ghost block" style="margin-top:10px" onclick="savePdf()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Scarica solo il PDF
+    </button>
+    <div style="height:20px"></div>
+  </div>`;
+}
+function clientSelect(r){
+  const opts=['<option value="">— Seleziona cliente —</option>'];
+  settings.clients.forEach((c,i)=>opts.push(`<option value="${i}" ${c.name===r.client?'selected':''}>${esc(c.name)}${c.commessa?' · '+esc(c.commessa):''}</option>`));
+  if(r.client&&!settings.clients.some(c=>c.name===r.client))opts.push(`<option value="manual" selected>${esc(r.client)} (non in elenco)</option>`);
+  opts.push('<option value="new">+ Nuovo cliente…</option>');
+  return `<select onchange="pickClient(this.value)">${opts.join('')}</select>`;
+}
+function pickClient(v){
+  if(v==='new'){ if(!addClientPrompt())render(); else render(); return; }
+  if(v===''){ current.client='';current.commessa='';current.clientEmail=''; }
+  else if(v!=='manual'){ const c=settings.clients[+v]; if(c){current.client=c.name;current.commessa=c.commessa||'';current.clientEmail=c.email||'';} }
+  saveCurrent(true); renderTopbar(); render();
+}
+function addClientPrompt(){
+  const name=prompt('Nome cliente:'); if(!name||!name.trim())return false;
+  const commessa=(prompt('Numero commessa:')||'').trim();
+  const email=(prompt('Email cliente:')||'').trim();
+  const c={name:name.trim(),commessa,email};
+  settings.clients.push(c); saveSettings();
+  current.client=c.name; current.commessa=c.commessa; current.clientEmail=c.email; saveCurrent(true);
+  return true;
+}
+function toggleAbsent(v){ current.clientAbsent=v; if(v)current.signature=''; saveCurrent(true); render(); }
+function techSelect(v){
+  const opts=['<option value="">—</option>'].concat(settings.team.map(t=>`<option ${t===v?'selected':''}>${esc(t)}</option>`));
+  if(v&&!settings.team.includes(v))opts.push(`<option selected>${esc(v)}</option>`);
+  return `<select oninput="upd('tech',this.value)">${opts.join('')}</select>`;
+}
+function typeSelect(v){
+  const opts=settings.types.map(t=>`<option ${t===v?'selected':''}>${esc(t)}</option>`);
+  if(v&&!settings.types.includes(v))opts.unshift(`<option selected>${esc(v)}</option>`);
+  return `<select oninput="upd('type',this.value)">${opts.join('')}</select>`;
+}
+
+/* measures */
+function measuresHTML(ms){
+  if(!ms.length)return `<div style="padding:16px;text-align:center;color:#5C8792;font-size:13px">Nessun parametro. Selezionane uno qui sotto.</div>`;
+  return ms.map((m,i)=>`
+    <div class="mrow">
+      <div class="mname">${esc(m.name)}<small>${esc(m.unit||'—')}</small></div>
+      <div class="mval"><input inputmode="decimal" value="${esc(m.value)}" placeholder="––" oninput="updMeasure(${i},this.value)"><span class="munit">${esc(m.unit||'')}</span></div>
+      <button class="mdel" onclick="delMeasure(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>`).join('');
+}
+function addMeasure(){
+  const sel=document.getElementById('measSel');
+  if(sel.value==='custom'){
+    const name=prompt('Nome parametro:'); if(!name)return;
+    const unit=prompt('Unità di misura (opzionale):')||'';
+    current.measures.push({name:name.trim(),unit:unit.trim(),value:''});
+  }else{
+    const p=MEASURE_PRESETS[+sel.value];
+    current.measures.push({name:p[0],unit:p[1],value:''});
+  }
+  document.getElementById('measList').innerHTML=measuresHTML(current.measures);
+  queueSave();
+}
+function updMeasure(i,v){current.measures[i].value=v;queueSave();}
+function delMeasure(i){current.measures.splice(i,1);document.getElementById('measList').innerHTML=measuresHTML(current.measures);queueSave();}
+
+/* materials */
+function materialsHTML(mats){
+  return mats.map((m,i)=>`
+    <div class="matrow">
+      <input placeholder="Descrizione ricambio/materiale" value="${esc(m.desc)}" oninput="updMat(${i},'desc',this.value)">
+      <input placeholder="Qtà" value="${esc(m.qty)}" oninput="updMat(${i},'qty',this.value)">
+      <button class="trash" onclick="delMat(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+    </div>`).join('');
+}
+function addMaterial(){current.materials.push({desc:'',qty:''});document.getElementById('matList').innerHTML=materialsHTML(current.materials);queueSave();}
+function updMat(i,k,v){current.materials[i][k]=v;queueSave();}
+function delMat(i){current.materials.splice(i,1);document.getElementById('matList').innerHTML=materialsHTML(current.materials);queueSave();}
+
+/* photos */
+function photosHTML(ph){
+  return ph.map((p,i)=>`<div class="photo"><img src="${p}" alt=""><button class="rm" onclick="delPhoto(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>`).join('');
+}
+async function addPhotos(input){
+  const files=[...input.files]; input.value='';
+  for(const f of files){ try{const d=await compress(f);current.photos.push(d);}catch(e){} }
+  refreshPhotos(); queueSave();
+}
+function refreshPhotos(){
+  const grid=document.getElementById('photoGrid');
+  const label=grid.querySelector('.addphoto');
+  grid.innerHTML=photosHTML(current.photos);
+  grid.appendChild(label);
+}
+function delPhoto(i){current.photos.splice(i,1);refreshPhotos();queueSave();}
+function compress(file,max=1280,q=0.72){return new Promise((res,rej)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{let w=img.width,h=img.height;const s=Math.min(1,max/Math.max(w,h));
+    const cw=Math.round(w*s),ch=Math.round(h*s);const c=document.createElement('canvas');c.width=cw;c.height=ch;
+    c.getContext('2d').drawImage(img,0,0,cw,ch);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',q));};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej()};img.src=url;});}
+
+/* signature */
+function afterEditor(){ setupSig(); }
+function setupSig(){
+  const c=document.getElementById('sigpad'); if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr; c.height=rect.height*dpr;
+  const ctx=c.getContext('2d'); if(!ctx)return; ctx.scale(dpr,dpr);
+  ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0C2530';
+  sig={drawing:false,dirty:false,ctx,canvas:c,last:null,dpr};
+  if(current.signature){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,rect.width,rect.height);im.src=current.signature;}
+  const pos=e=>{const r=c.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};
+  const start=e=>{e.preventDefault();sig.drawing=true;sig.last=pos(e)};
+  const move=e=>{if(!sig.drawing)return;e.preventDefault();const p=pos(e);ctx.beginPath();ctx.moveTo(sig.last.x,sig.last.y);ctx.lineTo(p.x,p.y);ctx.stroke();sig.last=p;sig.dirty=true;};
+  const end=()=>{if(sig.drawing&&sig.dirty){current.signature=c.toDataURL('image/png');queueSave();}sig.drawing=false;};
+  c.addEventListener('pointerdown',start);c.addEventListener('pointermove',move);
+  if(window.__sigEnd)window.removeEventListener('pointerup',window.__sigEnd);
+  window.__sigEnd=end;window.addEventListener('pointerup',end);
+}
+function clearSig(){const c=sig.canvas;if(!c)return;const r=c.getBoundingClientRect();sig.ctx.clearRect(0,0,r.width,r.height);current.signature='';queueSave();}
+
+/* updates + save */
+function upd(k,v){current[k]=v; if(k==='client')renderTopbar(); queueSave();}
+function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveCurrent(true),600);}
+async function saveCurrent(silent){
+  if(!current)return;
+  const r=current;                      // riferimento stabile durante l'await
+  r.updatedAt=Date.now();
+  await dbPut('reports',r);
+  const clone=structuredCloneSafe(r);
+  const idx=reports.findIndex(x=>x.id===r.id);
+  if(idx>=0)reports[idx]=clone; else reports.unshift(clone);
+  reports.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0));
+}
+async function toggleStatus(){current.status=current.status==='completato'?'bozza':'completato';await saveCurrent();render();toast(current.status==='completato'?'Segnato come completato':'Riportato a bozza');}
+function confirmDelete(){
+  openSheet(`<h3>Eliminare il rapportino?</h3><p>L'operazione non è reversibile.</p>
+    <div class="btnrow" style="margin-top:0"><button class="btn ghost" onclick="closeSheet()">Annulla</button><button class="btn danger" onclick="doDelete()">Elimina</button></div>`);
+}
+async function doDelete(){await dbDel('reports',current.id);reports=reports.filter(r=>r.id!==current.id);closeSheet();go('list');toast('Rapportino eliminato');}
+
+/* ============================= SETTINGS ============================= */
+function settingsHTML(){
+  const c=settings.company;
+  return `<div class="wrap">
+    <div class="section-label">Dati azienda</div>
+    <div class="card">
+      <div class="field"><label>Logo (per il PDF)</label>
+        <div style="display:flex;gap:12px;align-items:center">
+          ${c.logo?`<img class="logo-prev" src="${c.logo}">`:`<div class="logo-prev" style="display:grid;place-items:center;color:var(--muted-2)">—</div>`}
+          <label class="btn ghost" style="cursor:pointer">Scegli immagine<input type="file" accept="image/*" class="hidden" onchange="setLogo(this)"></label>
+          ${c.logo?`<button class="btn danger" onclick="setSetting('company.logo','');saveSettings();render()">Rimuovi</button>`:''}
+        </div>
+      </div>
+      <div class="field"><label>Ragione sociale</label><input type="text" value="${esc(c.name)}" oninput="setSetting('company.name',this.value)"></div>
+      <div class="row2">
+        <div class="field"><label>P. IVA</label><input type="text" value="${esc(c.vat)}" oninput="setSetting('company.vat',this.value)"></div>
+        <div class="field"><label>Telefono</label><input type="text" value="${esc(c.phone)}" oninput="setSetting('company.phone',this.value)"></div>
+      </div>
+      <div class="field"><label>Indirizzo</label><input type="text" value="${esc(c.addr)}" oninput="setSetting('company.addr',this.value)"></div>
+    </div>
+
+    <div class="section-label">Clienti (nome · commessa · email)</div>
+    <div class="card"><div id="cliList">${clientsHTML()}</div>
+      <button class="linkbtn" onclick="addClientRow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Aggiungi cliente</button>
+    </div>
+
+    <div class="section-label">Tecnici del team</div>
+    <div class="card"><div id="teamList">${chipsList(settings.team,'team')}</div>
+      <button class="linkbtn" onclick="addItem('team','Nome tecnico:')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Aggiungi tecnico</button>
+    </div>
+
+    <div class="section-label">Tipi di intervento</div>
+    <div class="card"><div id="typeList">${chipsList(settings.types,'types')}</div>
+      <button class="linkbtn" onclick="addItem('types','Nuovo tipo di intervento:')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Aggiungi tipo</button>
+    </div>
+
+    <div class="section-label">Invio email</div>
+    <div class="card">
+      <div class="toggle-row">
+        <div><div style="font-weight:700;font-size:14.5px">Invio automatico via server</div>
+          <div style="color:var(--muted);font-size:12.5px;margin-top:2px">Se attivo, l'app invia il PDF direttamente all'email del cliente (richiede la funzione su Netlify — vedi guida).</div></div>
+        <label class="switch"><input type="checkbox" ${settings.email.endpoint?'checked':''} onchange="toggleServerEmail(this.checked)"><span class="sl"></span></label>
+      </div>
+      <div class="note" style="background:#EEF6F7;color:#245863">Con invio automatico <b>spento</b>, il pulsante "Invia PDF al cliente" apre la condivisione di Android: scegli Gmail/WhatsApp e il PDF è già allegato.</div>
+    </div>
+
+    <div class="section-label">Backup dei dati</div>
+    <div class="card" style="padding:14px">
+      <p style="margin:0 0 12px;color:var(--muted);font-size:13.5px">Esporta tutti i rapportini e le impostazioni in un file. Puoi condividerlo con il team o importarlo su un altro dispositivo.</p>
+      <div class="btnrow" style="margin-top:0">
+        <button class="btn dark" onclick="exportData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Esporta</button>
+        <label class="btn ghost" style="cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 8l5-5 5 5M12 3v12"/></svg>Importa<input type="file" accept="application/json,.json" class="hidden" onchange="importData(this)"></label>
+      </div>
+    </div>
+    <div style="text-align:center;color:var(--muted-2);font-size:12px;margin:18px 0 8px">${reports.length} rapportini archiviati${useMem?' · anteprima (non salvati)':''}</div>
+  </div>`;
+}
+function chipsList(arr,key){
+  if(!arr.length)return `<div style="padding:14px;color:var(--muted-2);font-size:13px">Nessuna voce.</div>`;
+  return `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:14px">`+arr.map((x,i)=>`
+    <span class="chip on" style="cursor:default;display:inline-flex;align-items:center;gap:8px">${esc(x)}
+      <button onclick="delItem('${key}',${i})" style="background:none;border:0;color:#9fd;cursor:pointer;display:grid;place-items:center;padding:0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </span>`).join('')+`</div>`;
+}
+function clientsHTML(){
+  const cs=settings.clients;
+  if(!cs.length)return `<div style="padding:14px;color:var(--muted-2);font-size:13px">Nessun cliente in elenco.</div>`;
+  return cs.map((c,i)=>`
+    <div class="cli">
+      <input placeholder="Nome cliente" value="${esc(c.name)}" oninput="updClient(${i},'name',this.value)">
+      <div class="cli2">
+        <input placeholder="N. commessa" value="${esc(c.commessa)}" oninput="updClient(${i},'commessa',this.value)">
+        <input placeholder="Email cliente" type="email" inputmode="email" value="${esc(c.email)}" oninput="updClient(${i},'email',this.value)">
+      </div>
+      <button class="linkbtn" style="color:var(--danger);padding:4px 2px;font-size:13px" onclick="delClient(${i})">Rimuovi cliente</button>
+    </div>`).join('');
+}
+function updClient(i,k,v){settings.clients[i][k]=v;saveSettings();}
+function delClient(i){settings.clients.splice(i,1);saveSettings();render();}
+function addClientRow(){settings.clients.push({name:'',commessa:'',email:''});saveSettings();render();}
+function toggleServerEmail(on){ settings.email.endpoint = on?'/.netlify/functions/send-report':''; saveSettings(); render(); }
+function setSetting(path,v){const[a,b]=path.split('.');if(b)settings[a][b]=v;else settings[a]=v;saveSettings();}
+function saveSettings(){dbPut('kv',settings,'settings');}
+function setLogo(input){const f=input.files[0];if(!f)return;compress(f,300,.85).then(d=>{settings.company.logo=d;saveSettings();render();});}
+function addItem(key,msg){const v=prompt(msg);if(v&&v.trim()){settings[key].push(v.trim());saveSettings();render();}}
+function delItem(key,i){settings[key].splice(i,1);saveSettings();render();}
+
+/* ============================= Backup ============================= */
+function exportData(){
+  const data={app:'rapportini-acque',version:1,exportedAt:new Date().toISOString(),settings,reports};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`backup-rapportini-${todayISO()}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup esportato');
+}
+function importData(input){
+  const f=input.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=async()=>{try{
+    const d=JSON.parse(rd.result);
+    if(!d.reports)throw 0;
+    openSheet(`<h3>Importare ${d.reports.length} rapportini?</h3><p>I rapportini con lo stesso ID verranno aggiornati. Le impostazioni verranno sostituite.</p>
+      <div class="btnrow" style="margin-top:0"><button class="btn ghost" onclick="closeSheet()">Annulla</button><button class="btn primary" onclick='applyImport()'>Importa</button></div>`);
+    window.__imp=d;
+  }catch(e){toast('File non valido')}};
+  rd.readAsText(f);input.value='';
+}
+async function applyImport(){
+  const d=window.__imp;if(!d)return;
+  if(d.settings){settings=Object.assign(settings,d.settings);await saveSettings();}
+  for(const r of d.reports){await dbPut('reports',r);}
+  reports=await dbAll('reports');
+  reports.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0));
+  window.__imp=null;closeSheet();render();toast('Dati importati');
+}
+
+/* ============================= PDF (jsPDF) ============================= */
+function pdfTable(doc,opts){
+  if(typeof doc.autoTable==='function')return doc.autoTable(opts);
+  if(typeof window.autoTable==='function')return window.autoTable(doc,opts);
+  throw new Error('autoTable non disponibile');
+}
+function ensureY(doc,y,need){ if(y+need>283){ doc.addPage(); return 14; } return y; }
+function imgFmt(data){ return /^data:image\/png/i.test(data)?'PNG':'JPEG'; }
+
+function buildPdf(r0){
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  // il font PDF standard non include µ e gli apici ³/²: li rendo sicuri (µ→u, m³→m3)
+  const S=t=>String(t==null?'':t).replace(/[\u00B5\u03BC]/g,'u').replace(/\u00B3/g,'3').replace(/\u00B2/g,'2');
+  const r=Object.assign({},r0,{
+    client:S(r0.client),commessa:S(r0.commessa),plant:S(r0.plant),location:S(r0.location),
+    type:S(r0.type),tech:S(r0.tech),description:S(r0.description),recommendations:S(r0.recommendations),
+    signName:S(r0.signName),
+    measures:(r0.measures||[]).map(m=>({name:S(m.name),unit:S(m.unit),value:S(m.value)})),
+    materials:(r0.materials||[]).map(m=>({desc:S(m.desc),qty:S(m.qty)}))
+  });
+  const c0=settings.company, c=Object.assign({},c0,{name:S(c0.name),addr:S(c0.addr),vat:S(c0.vat),phone:S(c0.phone)});
+  const M=14, right=210-M;
+  let y=M;
+  // intestazione: logo + azienda
+  let tx=M;
+  if(c.logo){ try{ const p=doc.getImageProperties(c.logo); const w=26, h=Math.min(w*p.height/p.width,18); doc.addImage(c.logo,imgFmt(c.logo),M,y,w,h); tx=M+w+6; }catch(e){} }
+  doc.setFont('helvetica','bold').setFontSize(12).setTextColor(12,37,48);
+  if(c.name)doc.text(c.name,tx,y+5);
+  doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(70,90,100);
+  let cy=y+10;
+  [c.addr,[c.vat?('P.IVA '+c.vat):'',c.phone?('Tel '+c.phone):''].filter(Boolean).join('   ·   ')]
+    .filter(Boolean).forEach(l=>{doc.text(l,tx,cy);cy+=4;});
+  doc.setFont('helvetica','bold').setFontSize(12).setTextColor(12,37,48);
+  doc.text('RAPPORTINO DI INTERVENTO',right,y+4,{align:'right'});
+  doc.setFont('helvetica','normal').setFontSize(9).setTextColor(70,90,100);
+  doc.text('N. '+r.id.slice(1,8).toUpperCase()+'    ·    '+fmtDate(r.date),right,y+9.5,{align:'right'});
+  y=Math.max(cy,y+15)+2;
+  doc.setDrawColor(12,37,48).setLineWidth(0.5).line(M,y,right,y); y+=5;
+  // griglia dati
+  pdfTable(doc,{startY:y,theme:'plain',margin:{left:M,right:M},
+    styles:{fontSize:9,cellPadding:1.3,textColor:[20,40,50]},
+    columnStyles:{0:{fontStyle:'bold',textColor:[120,140,150],cellWidth:26},2:{fontStyle:'bold',textColor:[120,140,150],cellWidth:34}},
+    body:[
+      ['Cliente',r.client||'—','Commessa',r.commessa||'—'],
+      ['Impianto',r.plant||'—','Tipo interv.',r.type||'—'],
+      ['Ubicazione',r.location||'—','Tecnico',r.tech||'—'],
+      ['Data',fmtDate(r.date),'Orario',(r.start||'—')+(r.end?(' – '+r.end):'')]
+    ]});
+  y=doc.lastAutoTable.finalY+5;
+  const section=(t)=>{ y=ensureY(doc,y,12); doc.setFont('helvetica','bold').setFontSize(9.5).setTextColor(14,154,170); doc.text(t.toUpperCase(),M,y); doc.setDrawColor(14,154,170).setLineWidth(0.3).line(M,y+1.5,right,y+1.5); y+=6; };
+  const para=(txt)=>{ doc.setFont('helvetica','normal').setFontSize(9.5).setTextColor(30,45,55); doc.splitTextToSize(txt||'—',right-M).forEach(l=>{ y=ensureY(doc,y,5); doc.text(l,M,y); y+=4.6; }); y+=2; };
+
+  section('Descrizione lavori'); para(r.description);
+
+  const meas=r.measures.filter(m=>m.value!=='');
+  if(meas.length){ section('Parametri di processo');
+    pdfTable(doc,{startY:y,margin:{left:M,right:M},head:[['Parametro','Valore','Unità']],
+      body:meas.map(m=>[m.name,String(m.value),m.unit||'']),theme:'grid',
+      headStyles:{fillColor:[238,243,244],textColor:[91,116,128],fontSize:8.5,fontStyle:'bold'},
+      styles:{fontSize:9,cellPadding:2,textColor:[20,40,50]},
+      columnStyles:{1:{halign:'right',font:'courier'},2:{cellWidth:26}}});
+    y=doc.lastAutoTable.finalY+5;
+  }
+  const mats=r.materials.filter(m=>m.desc);
+  if(mats.length){ section('Materiali e ricambi');
+    pdfTable(doc,{startY:y,margin:{left:M,right:M},head:[['Descrizione','Qtà']],
+      body:mats.map(m=>[m.desc,String(m.qty||'')]),theme:'grid',
+      headStyles:{fillColor:[238,243,244],textColor:[91,116,128],fontSize:8.5,fontStyle:'bold'},
+      styles:{fontSize:9,cellPadding:2,textColor:[20,40,50]},columnStyles:{1:{halign:'right',cellWidth:24}}});
+    y=doc.lastAutoTable.finalY+5;
+  }
+  if(r.recommendations){ section('Note e raccomandazioni'); para(r.recommendations); }
+
+  if(r.photos.length){ section('Documentazione fotografica');
+    const gap=4, cols=3, cw=(right-M-gap*(cols-1))/cols, chMax=cw*0.75; let col=0, x=M;
+    for(const p of r.photos){
+      if(col===0){ y=ensureY(doc,y,chMax+gap); x=M; }
+      try{ const pr=doc.getImageProperties(p); let iw=cw, ih=cw*pr.height/pr.width;
+        if(ih>chMax){ ih=chMax; iw=chMax*pr.width/pr.height; }
+        doc.addImage(p,imgFmt(p),x+(cw-iw)/2,y+(chMax-ih)/2,iw,ih); }catch(e){}
+      x+=cw+gap; col++; if(col===cols){ col=0; y+=chMax+gap; }
+    }
+    if(col!==0)y+=chMax+gap; y+=2;
+  }
+
+  // firma
+  y=ensureY(doc,y,34); y+=4;
+  const half=(right-M)/2, cx=M+half+4;
+  if(!r.clientAbsent&&r.signature){ try{ doc.addImage(r.signature,'PNG',cx,y-2,half-8,16); }catch(e){} }
+  if(r.clientAbsent){ doc.setFont('helvetica','italic').setFontSize(9).setTextColor(150,90,0); doc.text('Cliente assente alla firma',cx,y+10); }
+  doc.setDrawColor(12,37,48).setLineWidth(0.3);
+  doc.line(M,y+18,M+half-8,y+18); doc.line(cx,y+18,right,y+18);
+  doc.setFont('helvetica','normal').setFontSize(8).setTextColor(91,116,128);
+  doc.text('Il tecnico   '+(r.tech||''),M,y+22);
+  doc.text('Il cliente   '+(r.clientAbsent?'':(r.signName||'')),cx,y+22);
+
+  const safe=(r.commessa||r.client||'intervento').replace(/[^\w\-]+/g,'_').slice(0,40);
+  return { doc, filename:`Rapportino_${safe}_${r.date}.pdf` };
+}
+function savePdf(){ saveCurrent(true); try{ const p=buildPdf(current); p.doc.save(p.filename); }catch(e){ toast('Errore nella creazione del PDF'); } }
+
+function blobToB64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+async function sendReport(){
+  await saveCurrent(true);
+  const r=current;
+  let pdf; try{ pdf=buildPdf(r); }catch(e){ toast('Errore nella creazione del PDF'); return; }
+  const blob=pdf.doc.output('blob');
+  const to=r.clientEmail||'';
+  const subject=`Rapportino intervento${r.commessa?(' · commessa '+r.commessa):''}${settings.company.name?(' · '+settings.company.name):''}`;
+  const body=`Buongiorno,\nin allegato il rapportino dell'intervento del ${fmtDate(r.date)}${r.plant?(' presso '+r.plant):(r.client?(' - '+r.client):'')}.\n\nCordiali saluti,\n${r.tech||settings.company.name||''}`;
+
+  // 1) invio automatico via server (se configurato in Impostazioni)
+  if(settings.email&&settings.email.endpoint){
+    try{
+      const b64=await blobToB64(blob);
+      const res=await fetch(settings.email.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({to,subject,text:body,filename:pdf.filename,pdfBase64:b64})});
+      if(res.ok){ toast('Email inviata'+(to?(' a '+to):'')); return; }
+      toast('Invio automatico non riuscito, uso la condivisione');
+    }catch(e){ toast('Server email non raggiungibile, uso la condivisione'); }
+  }
+  // 2) condivisione nativa con allegato (Android: apri Gmail/WhatsApp con il PDF)
+  try{
+    const file=new File([blob],pdf.filename,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:subject,text:(to?('A: '+to+'\n\n'):'')+body});
+      return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError')return; }
+  // 3) fallback: scarica il PDF e apri l'app email precompilata
+  pdf.doc.save(pdf.filename);
+  if(to){ try{ await navigator.clipboard.writeText(to); }catch(e){} }
+  const mail=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body+'\n\n(Allega il PDF appena scaricato: '+pdf.filename+')')}`;
+  toast('PDF scaricato: allegalo all\'email');
+  setTimeout(()=>{ window.location.href=mail; },400);
+}
+
+/* ============================= UI helpers ============================= */
+let toastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+function openSheet(html){const s=document.getElementById('sheet');s.innerHTML=html;document.getElementById('sheetBg').classList.add('show');}
+function closeSheet(){document.getElementById('sheetBg').classList.remove('show');}
+document.getElementById('sheetBg').addEventListener('click',e=>{if(e.target.id==='sheetBg')closeSheet();});
+
+boot();
+</script>
+</body>
+</html>
